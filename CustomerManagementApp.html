@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Management App</title>
+    <style>
+        /* Global styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Styles for the container */
+        #loginContainer {
+            /* display: none; */
+            background-color: #f2f2f2;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #customerListContainer {
+            display: none;
+            position: relative;
+            background-color: #f2f2f2;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .container h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Styles for the form */
+        #loginForm {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        input[type="password"] {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px;
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button.logout-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button.logout-button:hover {
+            background-color: #c82333;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Error message styles */
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Styles for the table */
+        #customerTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        #customerTable th,
+        #customerTable td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+        }
+
+        #customerTable th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        /* update and create Modal styles */
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #f2f2f2;
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* Show modal on overlay */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Center the content in the overlay */
+        .overlay-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- modal for Login -->
+    <div class="container" id="loginContainer">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <label for="email">Email:</label>
+            <input type="text" id="email" name="email" required>
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+
+            <button type="button" onclick="login()">Login</button>
+            <div class="error-message" id="errorMessage"></div>
+        </form>
+    </div>
+
+    <!-- modal for fetch customer List -->
+    <div class="container" id="customerListContainer">
+        <button onclick="logout()" class="logout-button">Logout</button>
+        <h1>Customer List</h1>
+        <table id="customerTable">
+            <thead>
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Street</th>
+                    <th>Address</th>
+                    <th>City</th>
+                    <th>State</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="customerTableBody">
+                <!-- Customer data will be dynamically populated here -->
+                <!-- <tr>
+                    <td>Ajay</td>
+                    <td>Khade</td>
+                    <td>Gurav Galli</td>
+                    <td>Sangrul</td>
+                    <td>Kolhapur</td>
+                    <td>Maharashtra</td>
+                    <td>ajaykhade110@gmail.com</td>
+                    <td>7744965911</td>
+                    <td>
+                        <button onclick="openUpdateModal('${customer.uuid}', '${customer.first_name}',
+                            '${customer.last_name}', '${customer.street}', '${customer.address}', '${customer.city}',
+                            '${customer.state}', '${customer.email}', '${customer.phone}')">Edit</button>
+                        <button onclick="deleteCustomer('${customer.uuid}')">Delete</button>
+                    </td>
+                </tr> -->
+            </tbody>
+        </table>
+        <button onclick="openCreateModal()">Create a new Customer</button>
+    </div>
+
+    <!-- modal for create a new customer -->
+    <div class="overlay" id="createOverlay" style="display: none;">
+        <button onclick="logout()" class="logout-button">Logout</button>
+        <div class="modal" id="createModal">
+            <h2>Create a new Customer</h2>
+            <form id="createForm">
+                <label for="createFirstName">First Name:</label>
+                <input type="text" id="createFirstName" name="createFirstName" required>
+
+                <label for="createLastName">Last Name:</label>
+                <input type="text" id="createLastName" name="createLastName" required>
+
+                <label for="createStreet">Street:</label>
+                <input type="text" id="createStreet" name="createStreet">
+
+                <label for="createAddress">Address:</label>
+                <input type="text" id="createAddress" name="createAddress">
+
+                <label for="createCity">City:</label>
+                <input type="text" id="createCity" name="createCity">
+
+                <label for="createState">State:</label>
+                <input type="text" id="createState" name="createState">
+
+                <label for="createEmail">Email:</label>
+                <input type="email" id="createEmail" name="createEmail">
+
+                <label for="createPhone">Phone:</label>
+                <input type="number" id="createPhone" name="createPhone">
+
+                <button type="button" onclick="submitCreate()">Create</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add a modal for update customer details -->
+    <div class="overlay" id="updateOverlay" style="display: none;">
+        <button onclick="logout()" class="logout-button">Logout</button>
+    <div class="modal" id="updateModal">
+        <h2>Update Customer Details</h2>
+        <form id="updateForm">
+            <label for="updateFirstName">First Name:</label>
+            <input type="text" id="updateFirstName" name="updateFirstName" required>
+
+            <label for="updateLastName">Last Name:</label>
+            <input type="text" id="updateLastName" name="updateLastName" required>
+
+            <label for="updateStreet">Street:</label>
+            <input type="text" id="updateStreet" name="updateStreet">
+
+            <label for="updateAddress">Address:</label>
+            <input type="text" id="updateAddress" name="updateAddress">
+
+            <label for="updateCity">City:</label>
+            <input type="text" id="updateCity" name="updateCity">
+
+            <label for="updateState">State:</label>
+            <input type="text" id="updateState" name="updateState">
+
+            <label for="updateEmail">Email:</label>
+            <input type="text" id="updateEmail" name="updateEmail">
+
+            <label for="updatePhone">Phone:</label>
+            <input type="text" id="updatePhone" name="updatePhone">
+
+            <button type="button" onclick="submitUpdate()">Update</button>
+        </form>
+    </div>
+
+    <script>
+        function login() {
+            const loginData = {
+                login_id: document.getElementById("email").value,
+                password: document.getElementById("password").value
+            };
+
+            fetch("https://qa2.sunbasedata.com/sunbase/portal/api/assignment_auth.jsp", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(loginData)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Authentication failed");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const token = data.token;
+                    localStorage.setItem("token", token);
+                    // Call the function to fetch customer list after successful login
+                    fetchCustomerList(token);
+                    document.getElementById("loginContainer").style.display = "none";
+                })
+                .catch(error => {
+                    // Show error message
+                    document.getElementById("errorMessage").textContent =
+                        "Invalid email or password. Please try again.";
+                });
+        }
+
+        function openCreateModal() {
+            // Show the create modal and hide others
+            document.getElementById("createOverlay").style.display = "block";
+            document.getElementById("customerListContainer").style.display = "none";
+        }
+
+        function submitCreate() {
+            const token = localStorage.getItem("token");
+            const newCustomerData = {
+                first_name: document.getElementById("createFirstName").value,
+                last_name: document.getElementById("createLastName").value,
+                street: document.getElementById("createStreet").value,
+                address: document.getElementById("createAddress").value,
+                city: document.getElementById("createCity").value,
+                state: document.getElementById("createState").value,
+                email: document.getElementById("createEmail").value,
+                phone: document.getElementById("createPhone").value
+            };
+
+            fetch("https://qa2.sunbasedata.com/sunbase/portal/api/assignment.jsp", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    cmd: "create",
+                    ...newCustomerData
+                })
+            })
+                .then(response => {
+                    if (response.status === 201) {
+                        // Hide the create modal
+                        document.getElementById("createOverlay").style.display = "none";
+                        fetchCustomerList(token);
+                    } else if (response.status === 400) {
+                        console.error("First Name or Last Name is missing");
+                    } else {
+                        console.error("Error: Not created");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+        }
+
+        function fetchCustomerList(token) {
+            // Fetch customer list using the provided API
+            fetch("https://qa2.sunbasedata.com/sunbase/portal/api/assignment.jsp?cmd=get_customer_list", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch customer list");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data == "") {
+                        openCreateModal();
+                    }
+
+                    // Populate customer data in the table
+                    const customerTableBody = document.getElementById("customerTableBody");
+                    customerTableBody.innerHTML = "";
+                    data.forEach(customer => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${customer.first_name}</td>
+                            <td>${customer.last_name}</td>
+                            <td>${customer.street}</td>
+                            <td>${customer.address}</td>
+                            <td>${customer.city}</td>
+                            <td>${customer.state}</td>
+                            <td>${customer.email}</td>
+                            <td>${customer.phone}</td>
+                            <td>
+                        <button onclick="openUpdateModal('${customer.uuid}', '${customer.first_name}',
+                                '${customer.last_name}', '${customer.street}', '${customer.address}', '${customer.city}',
+                                '${customer.state}', '${customer.email}', '${customer.phone}')">Edit</button>
+                        <button onclick="deleteCustomer('${customer.uuid}')">Delete</button>
+                    </td>
+                        `;
+                        customerTableBody.appendChild(row);
+                    });
+                    // Show the customer list container and hide the login container
+                    document.getElementById("loginContainer").style.display = "none";
+                    document.getElementById("customerListContainer").style.display = "block";
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+        }
+
+        function deleteCustomer(uuid) {
+            const token = localStorage.getItem("token");
+            fetch("https://qa2.sunbasedata.com/sunbase/portal/api/assignment.jsp", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    cmd: "delete",
+                    uuid: uuid
+                })
+            })
+                .then(response => {
+                    if (response.status === 200) {
+                        // If successfully deleted, remove the row from the table
+                        document.getElementById("customerTableBody").querySelector(`[data-uuid="${uuid}"]`).remove();
+                    } else if (response.status === 400) {
+                        console.error("UUID not found");
+                    } else {
+                        console.error("Error: Not deleted");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+        }
+
+        function openUpdateModal(uuid, firstName, lastName, street, address, city, state, email, phone) {
+            // Populate the update form fields with the customer details
+            document.getElementById("updateFirstName").value = firstName;
+            document.getElementById("updateLastName").value = lastName;
+            document.getElementById("updateAddress").value = address;
+            document.getElementById("updateStreet").value = street;
+            document.getElementById("updateCity").value = city;
+            document.getElementById("updateState").value = state;
+            document.getElementById("updateEmail").value = email;
+            document.getElementById("updatePhone").value = phone;
+
+            // Show the update modal
+            document.getElementById("customerListContainer").style.display = "none";
+            document.getElementById("updateOverlay").style.display = "block";
+        }
+
+        function submitUpdate() {
+            const token = localStorage.getItem("token");
+            const uuid = document.getElementById("updateModal").dataset.uuid;
+            const updatedData = {
+                first_name: document.getElementById("updateFirstName").value,
+                last_name: document.getElementById("updateLastName").value,
+                address: document.getElementById("updateAddress").value,
+                street: document.getElementById("updateStreet").value,
+                city: document.getElementById("updateCity").value,
+                state: document.getElementById("updateState").value,
+                email: document.getElementById("updateEmail").value,
+                phone: document.getElementById("updatePhone").value
+            };
+
+            fetch("https://qa2.sunbasedata.com/sunbase/portal/api/assignment.jsp", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    cmd: "update",
+                    uuid: uuid,
+                    ...updatedData
+                })
+            })
+                .then(response => {
+                    if (response.status === 200) {
+
+                        fetchCustomerList(token);
+                        // Hide the update modal
+                        document.getElementById("updateOverlay").style.display = "none";
+                    } else if (response.status === 400) {
+                        console.error("Body is Empty");
+                    } else if (response.status === 500) {
+                        console.error("UUID not found");
+                    } else {
+                        console.error("Error: Not updated");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+        }
+
+        function logout() {
+            // Remove the token from localStorage and reload the page to show the login container again
+            localStorage.removeItem("token");
+            window.location.reload();
+        }
+    </script>
+</body>
+
+</html>
